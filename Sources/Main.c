@@ -1,13 +1,4 @@
 #include <Lovely.h>
-#include <handleapi.h>
-#include <minwindef.h>
-#include <processthreadsapi.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <winuser.h>
-ULONG FROM_CLICKER = 0xb00b;
-
-typedef enum MouseKind { MK_LEFT = 0xf, MK_RIGHT = 0xd } MOUSEKIND;
 
 DWORD MouseClickTask(LPVOID lpParam) {
   if (NULL == lpParam) {
@@ -57,35 +48,30 @@ void Click(MOUSEKIND mouseKind) {
 LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
   MSLLHOOKSTRUCT *pMouseStruct;
 
-  if (!(nCode >= 0 && (wParam == WM_LBUTTONDOWN || wParam == WM_RBUTTONDOWN))) {
-    goto bye;
-  }
+  if (nCode < 0 || (WM_LBUTTONDOWN != wParam && WM_RBUTTONDOWN != wParam))
+    goto next;
 
   pMouseStruct = (MSLLHOOKSTRUCT *)lParam;
 
-  if (pMouseStruct->dwExtraInfo == FROM_CLICKER)
-    goto bye;
+  if (FROM_CLICKER == pMouseStruct->dwExtraInfo)
+    goto next;
 
-  g_State.dynamicShouldIgnore =
+  BOOL shouldIgnore =
       (GetTime() - g_State.lastClickTime) > g_State.dynamicTimeoutMs;
 
   g_State.lastClickTime = GetTime();
 
-  fprintf(stderr, "should ignore? %d\n", g_State.dynamicShouldIgnore);
-
-  if (!g_State.dynamicShouldIgnore) {
+  if (!shouldIgnore)
     for (int i = 0; i < 2; ++i)
       Click(WM_LBUTTONDOWN == wParam ? MK_LEFT : MK_RIGHT);
-    goto bye;
-  }
 
-bye:
+next:
   return CallNextHookEx(g_Hook, nCode, wParam, lParam);
 }
 
 int main() {
-  // 1 Second
-  g_State.dynamicTimeoutMs = 100;
+  // 200 miliseconds
+  g_State.dynamicTimeoutMs = 200;
 
   g_Hook = SetWindowsHookEx(WH_MOUSE_LL, MouseProc, NULL, 0);
 

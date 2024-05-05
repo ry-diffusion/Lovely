@@ -1,8 +1,8 @@
 #include <Lovely.h>
-#include <minwindef.h>
 
 HHOOK g_Hook = NULL;
-State g_State = {FALSE, 1, {}};
+State g_State = {FALSE, {}};
+LONG FROM_CLICKER = 0xb00b;
 
 ULONGLONG GetTime(void) {
   FILETIME ft;
