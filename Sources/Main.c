@@ -1,5 +1,11 @@
 #include <Lovely.h>
 
+int BeRealtime(void)
+{
+	HANDLE  hProcess = GetCurrentProcess();
+	return  SetPriorityClass(hProcess, REALTIME_PRIORITY_CLASS) > 0;
+}
+
 DWORD MouseClickTask(LPVOID lpParam) {
   if (NULL == lpParam) {
     printf("MouseClickTask: NULL Pointer!\n");
@@ -70,6 +76,11 @@ next:
 }
 
 int main() {
+	if (!BeRealtime())
+	{
+		puts("Unable to set priority. You may experience input lag!");
+	}
+
   // 200 miliseconds
   g_State.dynamicTimeoutMs = 200;
 
